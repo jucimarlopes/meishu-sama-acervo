@@ -34,7 +34,6 @@ export default async function ObraPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="max-w-4xl">
-      {/* Breadcrumb */}
       <nav className="text-sm text-gray-400 mb-4 flex gap-1.5 items-center">
         <Link href="/wiki" className="hover:text-navy">Início</Link>
         <span>›</span>
@@ -43,7 +42,6 @@ export default async function ObraPage({ params }: { params: { id: string } }) {
         <span className="text-gray-700 truncate">{obra.titulo}</span>
       </nav>
 
-      {/* Infobox */}
       <div className="float-right clear-right ml-5 mb-4 w-64 border border-gray-300 bg-white text-sm">
         <div className="bg-navy text-white font-serif text-sm px-3 py-2 text-center">{obra.titulo}</div>
         <table className="w-full border-collapse">
@@ -66,7 +64,6 @@ export default async function ObraPage({ params }: { params: { id: string } }) {
         )}
       </div>
 
-      {/* Título */}
       <h1 className="font-serif text-2xl font-normal text-navy mb-1">{obra.titulo}</h1>
       {obra.subtitulo && <p className="text-gray-500 mb-4">{obra.subtitulo}</p>}
 
@@ -78,7 +75,6 @@ export default async function ObraPage({ params }: { params: { id: string } }) {
         </div>
       )}
 
-      {/* Trechos */}
       <div className="clear-both">
         <h2 className="font-serif text-xl text-navy border-b border-gray-200 pb-2 mb-4">
           Conteúdo <span className="text-sm font-sans text-gray-400">({count ?? 0} trechos indexados)</span>
