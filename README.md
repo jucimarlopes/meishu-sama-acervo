@@ -7,6 +7,7 @@ Biblioteca Digital dos Ensinamentos de Mokiti Okada (1882–1955).
 - Supabase (Auth + PostgreSQL + pgvector)
 - Tailwind CSS
 - Vercel (deploy)
+- Parece que ficou bom
 
 ## Setup local
 
