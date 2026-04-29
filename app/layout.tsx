@@ -1,0 +1,17 @@
+import type { Metadata } from 'next'
+import './globals.css'
+
+export const metadata: Metadata = {
+  title: 'Acervo Meishu-Sama',
+  description: 'Biblioteca Digital dos Ensinamentos de Mokiti Okada',
+}
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="pt-BR">
+      <body className="bg-cream font-sans text-gray-900 min-h-screen">
+        {children}
+      </body>
+    </html>
+  )
+}

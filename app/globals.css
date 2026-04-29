@@ -1,0 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Source+Sans+3:wght@300;400;500;600&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --navy: #1a3358;
+  --gold:  #b8963e;
+  --cream: #faf8f3;
+}
+
+mark {
+  background: #fff3a3;
+  padding: 0 2px;
+  border-radius: 2px;
+}
