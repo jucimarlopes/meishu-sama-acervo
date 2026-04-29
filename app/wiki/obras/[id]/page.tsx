@@ -20,6 +20,18 @@ export default async function ObraPage({ params }: { params: { id: string } }) {
     .order('chunk_index')
     .limit(50)
 
+  const colecaoNome: string | null = (obra as any).colecoes?.nome ?? null
+
+  const infoRows: Array<{ label: string; valor: string }> = [
+    { label: 'Tipo',    valor: obra.tipo },
+    { label: 'Idioma',  valor: obra.idioma_original === 'ja' ? 'Japonês (traduzido)' : 'Português' },
+    ...(obra.volume   ? [{ label: 'Volume',  valor: String(obra.volume) }]  : []),
+    ...(obra.ano      ? [{ label: 'Ano',     valor: String(obra.ano) }]     : []),
+    ...(obra.paginas  ? [{ label: 'Páginas', valor: String(obra.paginas) }] : []),
+    ...(obra.editora  ? [{ label: 'Editora', valor: obra.editora }]         : []),
+    ...(colecaoNome   ? [{ label: 'Coleção', valor: colecaoNome }]          : []),
+  ]
+
   return (
     <div className="max-w-4xl">
       {/* Breadcrumb */}
@@ -31,23 +43,15 @@ export default async function ObraPage({ params }: { params: { id: string } }) {
         <span className="text-gray-700 truncate">{obra.titulo}</span>
       </nav>
 
-      {/* Infobox flutuante */}
+      {/* Infobox */}
       <div className="float-right clear-right ml-5 mb-4 w-64 border border-gray-300 bg-white text-sm">
         <div className="bg-navy text-white font-serif text-sm px-3 py-2 text-center">{obra.titulo}</div>
         <table className="w-full border-collapse">
           <tbody>
-            {[
-              ['Tipo',    obra.tipo],
-              ['Idioma',  obra.idioma_original === 'ja' ? 'Japonês (traduzido)' : 'Português'],
-              obra.volume ? ['Volume', obra.volume.toString()] : null,
-              obra.ano    ? ['Ano',    obra.ano.toString()]    : null,
-              obra.paginas ? ['Páginas', obra.paginas.toString()] : null,
-              obra.editora ? ['Editora', obra.editora]         : null,
-              [obra.colecoes ? 'Coleção' : null, (obra as any).colecoes?.nome],
-            ].filter(Boolean).filter(r => r![0] && r![1]).map(([k, v]) => (
-              <tr key={k} className="border-b border-gray-100">
-                <td className="px-2.5 py-1.5 font-medium text-gray-500 w-2/5">{k}</td>
-                <td className="px-2.5 py-1.5">{v}</td>
+            {infoRows.map(({ label, valor }) => (
+              <tr key={label} className="border-b border-gray-100">
+                <td className="px-2.5 py-1.5 font-medium text-gray-500 w-2/5">{label}</td>
+                <td className="px-2.5 py-1.5">{valor}</td>
               </tr>
             ))}
           </tbody>
@@ -62,14 +66,14 @@ export default async function ObraPage({ params }: { params: { id: string } }) {
         )}
       </div>
 
-      {/* Título e conteúdo */}
+      {/* Título */}
       <h1 className="font-serif text-2xl font-normal text-navy mb-1">{obra.titulo}</h1>
       {obra.subtitulo && <p className="text-gray-500 mb-4">{obra.subtitulo}</p>}
 
       {obra.tags && obra.tags.length > 0 && (
         <div className="flex flex-wrap gap-1.5 mb-5">
-          {obra.tags.map((tag: string) => (
-            <span key={tag} className="text-xs px-2 py-0.5 bg-cream-dark text-gray-500 rounded-full">{tag}</span>
+          {(obra.tags as string[]).map((tag) => (
+            <span key={tag} className="text-xs px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full">{tag}</span>
           ))}
         </div>
       )}
@@ -79,11 +83,10 @@ export default async function ObraPage({ params }: { params: { id: string } }) {
         <h2 className="font-serif text-xl text-navy border-b border-gray-200 pb-2 mb-4">
           Conteúdo <span className="text-sm font-sans text-gray-400">({count ?? 0} trechos indexados)</span>
         </h2>
-
         {!trechos || trechos.length === 0 ? (
           <p className="text-gray-400 text-sm">Nenhum trecho disponível.</p>
         ) : (
-          <div className="space-y-0 font-serif text-base leading-relaxed text-gray-800">
+          <div className="font-serif text-base leading-relaxed text-gray-800">
             {trechos.map((t, i) => (
               <div key={t.id} className={`py-3 ${i > 0 ? 'border-t border-gray-100' : ''}`}>
                 {t.pagina && <span className="text-xs text-gray-300 float-right ml-2">p.{t.pagina}</span>}
