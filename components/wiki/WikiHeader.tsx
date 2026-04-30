@@ -45,10 +45,13 @@ export default function WikiHeader() {
         {/* Nav */}
         <nav className="hidden md:flex items-center gap-1 text-sm font-sans">
           {[
-            ['Início', '/wiki'],
-            ['Livros', '/wiki/obras?tipo=livro'],
-            ['Áudios', '/wiki/obras?tipo=audio'],
-            ['Imagens', '/wiki/obras?tipo=imagem'],
+            ['Início',      '/wiki'],
+            ['Livros',      '/wiki/obras?tipo=livro'],
+            ['Revistas',    '/wiki/obras?tipo=revista'],
+            ['Publicações', '/wiki/obras?tipo=publicacao'],
+            ['Áudios',      '/wiki/obras?tipo=audio'],
+            ['Vídeos',      '/wiki/obras?tipo=video'],
+            ['Imagens',     '/wiki/obras?tipo=imagem'],
           ].map(([label, href]) => (
             <Link key={label} href={href} className="px-3 py-1 text-white/70 hover:text-white border-b-2 border-transparent hover:border-gold transition-all">
               {label}
