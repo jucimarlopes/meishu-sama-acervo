@@ -105,7 +105,7 @@ function BuscaContent() {
           ) : (
             <div className="space-y-4">
               {results.map(r => (
-              <a href={`/wiki/obras/${r.obra_id}`} key={r.trecho_id} className="block bg-white border border-gray-200 rounded-md p-4 hover:border-navy hover:shadow-sm transition-all cursor-pointer">                  <div className="flex items-start gap-2 mb-1">
+              <a href={`/wiki/obras/${r.obra_id}#trecho-${r.chunk_index}`} key={r.trecho_id} className="block bg-white border border-gray-200 rounded-md p-4 hover:border-navy hover:shadow-sm transition-all cursor-pointer">                  <div className="flex items-start gap-2 mb-1">
                     <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-medium">{tipoLabel[r.obra_tipo]}</span>
                     {r.match_type === 'hybrid' && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">híbrido</span>}
                     {r.pagina && <span className="text-xs text-gray-400 ml-auto">pág. {r.pagina}</span>}
