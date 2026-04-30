@@ -82,13 +82,17 @@ export default async function ObraPage({ params }: { params: { id: string } }) {
         {!trechos || trechos.length === 0 ? (
           <p className="text-gray-400 text-sm">Nenhum trecho disponível.</p>
         ) : (
-          <div className="font-serif text-base leading-relaxed text-gray-800">
+          <div className="max-w-3xl mx-auto">
             {trechos.map((t, i) => (
-              <div key={t.id} className={`py-3 ${i > 0 ? 'border-t border-gray-100' : ''}`}>
-                {t.pagina && <span className="text-xs text-gray-300 float-right ml-2">p.{t.pagina}</span>}
-                <p>{t.conteudo}</p>
-              </div>
-            ))}
+              <div key={t.id} className={`${i > 0 ? 'border-t border-gray-100' : ''}`}>
+                {t.pagina && (
+                  <span className="text-xs text-gray-300 float-right ml-4 mt-5">p.{t.pagina}</span>
+                )}
+                <p className="text-base leading-8 text-gray-800 text-justify py-4 px-2 indent-8">
+                {t.conteudo}
+                </p>
+          </div>
+          ))}
             {count && count > 50 && (
               <p className="text-sm text-gray-400 pt-3 border-t border-gray-100">
                 Mostrando 50 de {count} trechos. Use a busca para explorar o conteúdo completo.
