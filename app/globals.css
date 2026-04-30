@@ -1,16 +1,34 @@
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Source+Sans+3:wght@300;400;500;600&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --navy: #1a3358;
-  --gold:  #b8963e;
-  --cream: #faf8f3;
+  --fmo-blue:        #1e73be;
+  --fmo-blue-dark:   #0d62a6;
+  --fmo-blue-deep:   #0e3b59;
+  --fmo-blue-mid:    #3b8fd3;
+  --fmo-orange:      #f6a623;
+  --fmo-bg:          #e8f6ff;
+  --fmo-text:        #2a2e35;
+  --fmo-text-muted:  #5f6670;
+  --fmo-surface:     #ffffff;
+  --fmo-border:      #e5e5e5;
+}
+
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial,
+    'Apple Color Emoji', 'Segoe UI Emoji', sans-serif;
+  background: var(--fmo-bg);
+  color: var(--fmo-text);
 }
 
 mark {
   background: #fff3a3;
   padding: 0 2px;
   border-radius: 2px;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
 }
