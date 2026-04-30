@@ -14,24 +14,28 @@ const tipoCor: Record<string, string> = {
 export default async function ObrasPage({
   searchParams
 }: {
-  searchParams: { tipo?: string; colecao?: string }
+  searchParams: { tipo?: string; colecao?: string; periodo?: string; idioma?: string }
 }) {
   const supabase = await createClient()
 
   let query = supabase
     .from('obras')
-    .select('id, titulo, tipo, idioma_original, volume, ano, colecao_id')
+    .select('id, titulo, tipo, idioma_original, volume, ano, periodo, colecao_id')
     .eq('status_ingestao', 'concluido')
     .order('titulo')
 
   if (searchParams.tipo)    query = query.eq('tipo', searchParams.tipo)
+  if (searchParams.idioma)  query = query.eq('idioma_original', searchParams.idioma)
+  if (searchParams.periodo) query = query.eq('periodo', searchParams.periodo)
 
   const { data: obras } = await query
 
-  const titulo = searchParams.tipo
-    ? `${tipoLabel[searchParams.tipo] ?? searchParams.tipo}s`
-    : 'Todo o Acervo'
-
+  const titulo =
+    searchParams.periodo ? `Período: ${searchParams.periodo}` :
+    searchParams.idioma  ? (searchParams.idioma === 'ja' ? 'Japonês (traduzidos)' : 'Português') :
+    searchParams.tipo    ? `${tipoLabel[searchParams.tipo] ?? searchParams.tipo}s` :
+    'Todo o Acervo'
+  
   return (
     <div>
       <h1 className="font-serif text-navy text-2xl border-b-2 border-gold pb-2 mb-6">{titulo}</h1>
