@@ -34,6 +34,35 @@ export default async function WikiSidebar() {
           </Link>
         ))}
       </div>
+      {/* Por período */}
+      <div className="border-b border-gray-100">
+        <div className="px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-cream">Por período</div>
+          {[
+              ['1920–1935', '1920-1935'],
+              ['1935–1947', '1935-1947'],
+              ['1947–1955', '1947-1955'],
+              ['Pós 1955',  'pos-1955'],
+            ].map(([label, value]) => (
+          <Link key={value} href={`/wiki/obras?periodo=${encodeURIComponent(value)}`}
+          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-cream border-l-2 border-transparent hover:border-gold transition-all">
+          <span>📅</span>{label}
+          </Link>
+          ))}
+      </div>
+
+{/* Por idioma */}
+<div className="border-b border-gray-100">
+  <div className="px-4 py-2.5 text-xs font-semibold text-gray-400 uppercase tracking-wider bg-cream">Por idioma</div>
+  {[
+    ['🇧🇷 Português', 'pt-BR'],
+    ['🇯🇵 Japonês (traduzido)', 'ja'],
+  ].map(([label, value]) => (
+    <Link key={value} href={`/wiki/obras?idioma=${encodeURIComponent(value)}`}
+      className="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-cream border-l-2 border-transparent hover:border-gold transition-all">
+      {label}
+    </Link>
+  ))}
+</div>
 
       {/* Coleções */}
       {colecoes && colecoes.length > 0 && (
