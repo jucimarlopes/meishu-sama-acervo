@@ -84,7 +84,7 @@ export default async function ObraPage({ params }: { params: { id: string } }) {
         ) : (
           <div className="max-w-3xl mx-auto">
             {trechos.map((t, i) => (
-              <div key={t.id} className={`${i > 0 ? 'border-t border-gray-100' : ''}`}>
+              <div key={t.id} id={`trecho-${t.chunk_index}`} className={`${i > 0 ? 'border-t border-gray-100' : ''}`}>
                 {t.pagina && (
                   <span className="text-xs text-gray-300 float-right ml-4 mt-5">p.{t.pagina}</span>
                 )}
