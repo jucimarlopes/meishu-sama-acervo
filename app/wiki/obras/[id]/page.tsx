@@ -2,7 +2,13 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
-export default async function ObraPage({ params }: { params: { id: string } }) {
+export default async function ObraPage({
+  params,
+  searchParams,
+}: {
+  params: { id: string }
+  searchParams: { q?: string }
+}) {
   const supabase = await createClient()
 
   const { data: obra } = await supabase
@@ -21,6 +27,7 @@ export default async function ObraPage({ params }: { params: { id: string } }) {
     .limit(50)
 
   const colecaoNome: string | null = (obra as any).colecoes?.nome ?? null
+  const queryBusca = searchParams.q || ''
 
   const infoRows: Array<{ label: string; valor: string }> = [
     { label: 'Tipo',    valor: obra.tipo },
@@ -31,6 +38,16 @@ export default async function ObraPage({ params }: { params: { id: string } }) {
     ...(obra.editora  ? [{ label: 'Editora', valor: obra.editora }]         : []),
     ...(colecaoNome   ? [{ label: 'Coleção', valor: colecaoNome }]          : []),
   ]
+
+  function destacarTexto(texto: string, query: string): string {
+    if (!query.trim()) return texto
+    const termos = query.trim().split(/\s+/).map(w =>
+      w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    ).filter(w => w.length > 1)
+    if (termos.length === 0) return texto
+    const regex = new RegExp(`(${termos.join('|')})`, 'gi')
+    return texto.replace(regex, '<mark>$1</mark>')
+  }
 
   return (
     <div className="max-w-4xl">
@@ -82,17 +99,18 @@ export default async function ObraPage({ params }: { params: { id: string } }) {
         {!trechos || trechos.length === 0 ? (
           <p className="text-gray-400 text-sm">Nenhum trecho disponível.</p>
         ) : (
-          <div className="max-w-3xl mx-auto highlight-sweep">
+          <div className={`max-w-3xl mx-auto ${queryBusca ? 'highlight-sweep' : ''}`}>
             {trechos.map((t, i) => (
               <div key={t.id} id={`trecho-${t.chunk_index}`} className={`${i > 0 ? 'border-t border-gray-100' : ''}`}>
                 {t.pagina && (
                   <span className="text-xs text-gray-300 float-right ml-4 mt-5">p.{t.pagina}</span>
                 )}
-                <p className="text-base leading-8 text-gray-800 text-justify py-4 px-2 indent-8">
-                {t.conteudo}
-                </p>
-          </div>
-          ))}
+                <p
+                  className="text-base leading-8 text-gray-800 text-justify py-4 px-2 indent-8"
+                  dangerouslySetInnerHTML={{ __html: destacarTexto(t.conteudo, queryBusca) }}
+                />
+              </div>
+            ))}
             {count && count > 50 && (
               <p className="text-sm text-gray-400 pt-3 border-t border-gray-100">
                 Mostrando 50 de {count} trechos. Use a busca para explorar o conteúdo completo.
