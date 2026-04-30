@@ -9,13 +9,34 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        navy:    { DEFAULT: '#1a3358', light: '#2b4a7a', dark: '#0f1f36' },
-        gold:    { DEFAULT: '#b8963e', light: '#d4a94e', dark: '#8a6e2a' },
-        cream:   { DEFAULT: '#faf8f3', dark: '#f0ece0' },
+        navy: {
+          DEFAULT: '#1e73be',
+          light:   '#4a73b9',
+          dark:    '#0d62a6',
+        },
+        gold: {
+          DEFAULT: '#f6a623',
+          light:   '#f8b84e',
+          dark:    '#d4891a',
+        },
+        cream: {
+          DEFAULT: '#e8f6ff',
+          dark:    '#d4ecfa',
+        },
+        fmo: {
+          blue:        '#1e73be',
+          'blue-dark': '#0d62a6',
+          'blue-deep': '#0e3b59',
+          'blue-mid':  '#3b8fd3',
+          orange:      '#f6a623',
+          text:        '#2a2e35',
+          'text-muted':'#5f6670',
+          'text-light':'#6b7280',
+        },
       },
       fontFamily: {
-        serif: ['EB Garamond', 'Georgia', 'serif'],
-        sans:  ['Source Sans 3', 'system-ui', 'sans-serif'],
+        sans:  ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'Apple Color Emoji', 'Segoe UI Emoji', 'sans-serif'],
+        serif: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
       },
     },
   },
