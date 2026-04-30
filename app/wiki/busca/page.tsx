@@ -3,18 +3,18 @@ import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 
 type Resultado = {
-  trecho_id: string
-  obra_id:   string
+  trecho_id:   string
+  obra_id:     string
   obra_titulo: string
   obra_tipo:   string
   colecao_nome: string | null
   conteudo:    string
   conteudo_hl: string
   pagina:      number | null
+  chunk_index: number | null
   score:       number
   match_type:  string
 }
-
 const tipos = ['','livro','revista','publicacao','audio','video','imagem']
 const tipoLabel: Record<string, string> = {
   '':'Todos','livro':'Livros','revista':'Revistas','publicacao':'Publicações',
