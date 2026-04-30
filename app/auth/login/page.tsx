@@ -32,7 +32,9 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gold text-navy font-serif text-3xl font-semibold mb-4">光</div>
+          <div className="inline-block w-24 h-24 rounded-full overflow-hidden border-4 border-gold mb-4 shadow-lg">
+            <img src="/meishu-sama.jpg" alt="Meishu-Sama" className="w-full h-full object-cover object-top" />
+          </div>
           <h1 className="font-serif text-white text-3xl font-normal">Acervo Meishu-Sama</h1>
           <p className="text-white/50 text-sm mt-1">Biblioteca Digital dos Ensinamentos</p>
         </div>
