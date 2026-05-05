@@ -17,7 +17,10 @@ export default function LoginPage() {
     setError('')
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) { setError(error.message); setLoading(false) }
-    else router.push('/wiki')
+    else {
+      router.refresh()   // força o middleware a reler o cookie de sessão
+      router.push('/wiki')
+    }
   }
 
   async function handleGoogle() {
