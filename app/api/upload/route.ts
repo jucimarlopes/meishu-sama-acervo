@@ -7,7 +7,7 @@ const supabase = createClient(
 )
 
 const WEBHOOK_URL = 'https://n8n.56.126.146.159.nip.io/webhook/meishu-upload'
-const BUCKET = 'documentos'
+const BUCKET = 'acervo-uploads'
 
 export async function POST(req: NextRequest) {
   try {
