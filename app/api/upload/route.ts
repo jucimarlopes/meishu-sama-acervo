@@ -17,18 +17,17 @@ export async function POST(req: NextRequest) {
 
     if (!file) return NextResponse.json({ error: 'Arquivo obrigatório' }, { status: 400 })
 
-    const ext = file.name.split('.').pop()
     const nomeSeguro = file.name.replace(/[^a-zA-Z0-9._-]/g, '_')
-    const storage_path = `${BUCKET}/${Date.now()}_${nomeSeguro}`
+    const storagePath = `${Date.now()}_${nomeSeguro}`
 
     // 1. Criar registro na tabela obras
     const { data: obra, error: obraErr } = await supabase
       .from('obras')
       .insert({
         titulo: file.name.replace(/\.[^.]+$/, ''),
-        arquivo_nome: file.name,
+        tipo: 'livro',
         mime_type: file.type,
-        status_ingestao: 'aguardando',
+        status_ingestao: 'pendente',
         colecao_id: colecao_id || null,
       })
       .select('id')
@@ -42,9 +41,10 @@ export async function POST(req: NextRequest) {
       .insert({
         obra_id: obra.id,
         arquivo_nome: file.name,
-        status: 'aguardando',
+        status: 'iniciado',
         etapa_atual: 'upload',
         progresso_pct: 0,
+        origem: 'upload',
       })
       .select('id')
       .single()
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     const bytes = await file.arrayBuffer()
     const { error: storageErr } = await supabase.storage
       .from(BUCKET)
-      .upload(`${Date.now()}_${nomeSeguro}`, bytes, { contentType: file.type })
+      .upload(storagePath, bytes, { contentType: file.type })
 
     if (storageErr) return NextResponse.json({ error: storageErr.message }, { status: 500 })
 
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         log_id: log.id,
         obra_id: obra.id,
-        storage_path: storage_path,
+        storage_path: `${BUCKET}/${storagePath}`,
         arquivo_nome: file.name,
         mime_type: file.type,
       }),
