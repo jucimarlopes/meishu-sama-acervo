@@ -113,7 +113,7 @@ function BuscaContent() {
                   <h3 className="font-serif text-base font-medium text-navy mb-1">{r.obra_titulo}</h3>
                   {r.colecao_nome && <p className="text-xs text-gray-400 mb-2">{r.colecao_nome}</p>}
                   <p
-                    className="text-sm text-gray-700 leading-relaxed"
+                    className="text-sm text-gray-700 leading-relaxed whitespace-pre-line"
                     dangerouslySetInnerHTML={{ __html: r.conteudo_hl || r.conteudo.substring(0, 300) + '...' }}
                   />
                 </a>

@@ -106,7 +106,7 @@ export default async function ObraPage({
                   <span className="text-xs text-gray-300 float-right ml-4 mt-5">p.{t.pagina}</span>
                 )}
                 <p
-                  className="text-base leading-8 text-gray-800 text-justify py-4 px-2 indent-8"
+                  className="text-base leading-8 text-gray-800 text-justify py-4 px-2 indent-8 whitespace-pre-line"
                   dangerouslySetInnerHTML={{ __html: destacarTexto(t.conteudo, queryBusca) }}
                 />
               </div>
