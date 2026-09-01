@@ -100,17 +100,19 @@ export default async function ObraPage({
           <p className="text-gray-400 text-sm">Nenhum trecho disponível.</p>
         ) : (
           <div className={`max-w-3xl mx-auto ${queryBusca ? 'highlight-sweep' : ''}`}>
-            {trechos.map((t, i) => (
-              <div key={t.id} id={`trecho-${t.chunk_index}`} className={`${i > 0 ? 'border-t border-gray-100' : ''}`}>
-                {t.pagina && (
-                  <span className="text-xs text-gray-300 float-right ml-4 mt-5">p.{t.pagina}</span>
-                )}
-                <p
-                  className="text-base leading-8 text-gray-800 text-justify py-4 px-2 indent-8 whitespace-pre-line"
-                  dangerouslySetInnerHTML={{ __html: destacarTexto(t.conteudo, queryBusca) }}
-                />
-              </div>
-            ))}
+            <p
+              className="text-base leading-8 text-gray-800 py-4 px-2 whitespace-pre-line"
+              dangerouslySetInnerHTML={{
+                __html: trechos
+                  .map((t) =>
+                    `<span id="trecho-${t.chunk_index}">` +
+                    (t.pagina ? `<sup class="text-[10px] text-gray-300 mx-0.5" contenteditable="false">p.${t.pagina}</sup>` : '') +
+                    destacarTexto(t.conteudo, queryBusca) +
+                    `</span>`
+                  )
+                  .join(' '),
+              }}
+            />
             {count && count > 50 && (
               <p className="text-sm text-gray-400 pt-3 border-t border-gray-100">
                 Mostrando 50 de {count} trechos. Use a busca para explorar o conteúdo completo.
