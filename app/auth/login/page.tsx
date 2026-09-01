@@ -20,6 +20,10 @@ export default function LoginPage() {
     else {
       router.refresh()   // força o middleware a reler o cookie de sessão
       router.push('/wiki')
+      // não desliga o loading aqui de propósito: a navegação vai desmontar
+      // este componente. Se por algum motivo a navegação travar, o timeout
+      // abaixo evita que o botão fique preso em "Entrando..." pra sempre.
+      setTimeout(() => setLoading(false), 8000)
     }
   }
 
