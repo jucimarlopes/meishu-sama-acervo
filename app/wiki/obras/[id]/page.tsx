@@ -113,20 +113,35 @@ export default async function ObraPage({
         {!trechos || trechos.length === 0 ? (
           <p className="text-gray-400 text-sm">Nenhum trecho disponível.</p>
         ) : (
-          <div className={`max-w-3xl mx-auto ${queryBusca ? 'highlight-sweep' : ''}`}>
-            <p
-              className="text-base leading-8 text-gray-800 py-4 px-2 whitespace-pre-line"
-              dangerouslySetInnerHTML={{
-                __html: trechos
-                  .map((t) =>
-                    `<span id="trecho-${t.chunk_index}">` +
-                    (t.pagina ? `<sup class="text-[10px] text-gray-300 mx-0.5" contenteditable="false">p.${t.pagina}</sup>` : '') +
-                    destacarTexto(t.conteudo, queryBusca) +
-                    `</span>`
-                  )
-                  .join(' '),
-              }}
-            />
+          <div className={`max-w-3xl mx-auto space-y-4 ${queryBusca ? 'highlight-sweep' : ''}`}>
+            {(() => {
+              // Agrupa trechos consecutivos em parágrafos "de verdade": só inicia um
+              // parágrafo novo quando o trecho ANTERIOR termina em pontuação final
+              // (. ! ? … " etc). Sem isso, o corte do chunking no meio da frase
+              // faria a mesma frase virar dois parágrafos visuais.
+              const FIM_DE_FRASE = /[.!?…”"）』」]['"）』」]?\s*$/
+              const grupos: { key: string; html: string }[] = []
+              trechos.forEach((t, i) => {
+                const anterior = trechos[i - 1]
+                const novoParagrafo = i === 0 || FIM_DE_FRASE.test((anterior?.conteudo || '').trim())
+                const marcador = t.pagina
+                  ? `<sup class="text-[10px] text-gray-300 mx-0.5" contenteditable="false">p.${t.pagina}</sup>`
+                  : ''
+                const spanHtml = `<span id="trecho-${t.chunk_index}">${marcador}${destacarTexto(t.conteudo, queryBusca)}</span>`
+                if (novoParagrafo || grupos.length === 0) {
+                  grupos.push({ key: `p-${t.chunk_index}`, html: spanHtml })
+                } else {
+                  grupos[grupos.length - 1].html += ' ' + spanHtml
+                }
+              })
+              return grupos.map((g) => (
+                <p
+                  key={g.key}
+                  className="text-base leading-8 text-gray-800 text-justify indent-8 whitespace-pre-line"
+                  dangerouslySetInnerHTML={{ __html: g.html }}
+                />
+              ))
+            })()}
             {count && count > 50 && (
               <p className="text-sm text-gray-400 pt-3 border-t border-gray-100">
                 Mostrando 50 de {count} trechos. Use a busca para explorar o conteúdo completo.
