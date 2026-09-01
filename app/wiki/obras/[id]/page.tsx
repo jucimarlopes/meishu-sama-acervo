@@ -39,11 +39,25 @@ export default async function ObraPage({
     ...(colecaoNome   ? [{ label: 'Coleção', valor: colecaoNome }]          : []),
   ]
 
+  // Mesma lista de palavras vazias que o dicionário 'portuguese_unaccent' do
+  // Postgres ignora no ts_headline da lista de busca — mantém o destaque
+  // consistente entre as duas telas, sem poluir com "que/tem/sobre" etc.
+  const PALAVRAS_VAZIAS = new Set([
+    'a','o','as','os','um','uma','uns','umas','de','do','da','dos','das',
+    'em','no','na','nos','nas','num','numa','por','pra','para','com','sem',
+    'e','ou','que','se','ao','aos','à','às','é','são','foi','foram','ser',
+    'está','estão','tem','têm','há','mas','como','já','também','sobre',
+    'até','pelo','pela','pelos','pelas','este','esta','isto','esse','essa',
+    'isso','aquele','aquela','aquilo','seu','sua','seus','suas','meu',
+    'minha','meus','minhas','me','te','lhe','nos','vos','lhes','qual',
+    'quais','quando','onde','porque','texto'
+  ])
+
   function destacarTexto(texto: string, query: string): string {
     if (!query.trim()) return texto
-    const termos = query.trim().split(/\s+/).map(w =>
-      w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    ).filter(w => w.length > 1)
+    const termos = query.trim().split(/\s+/)
+      .map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .filter(w => w.length > 1 && !PALAVRAS_VAZIAS.has(w.toLowerCase()))
     if (termos.length === 0) return texto
     const regex = new RegExp(`(${termos.join('|')})`, 'gi')
     return texto.replace(regex, '<mark>$1</mark>')
