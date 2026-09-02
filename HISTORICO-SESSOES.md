@@ -6,6 +6,73 @@ entre assistentes de IA diferentes que tenham acesso a este projeto.
 
 ---
 
+## Sessão — 2026-09-02 (Claude) — Debug: 404 no Traduzir Lote Gemini
+
+**⚠️ PISTA MAIS IMPORTANTE PARA A PRÓXIMA SESSÃO**: o usuário confirmou que o
+código original de tradução (versão bem anterior às edições desta sessão)
+**conseguia trazer tradução com sucesso**. Ou seja, o 404 é uma regressão
+introduzida em algum momento das edições — vale comparar contra o histórico
+de versões do workflow no n8n (`get_workflow_history`) pra achar exatamente
+o que mudou entre a última versão que funcionava e a atual, em vez de seguir
+só tentando variações novas às cegas.
+
+### O problema
+
+Nó `Traduzir Lote Gemini` retorna **404** (`AxiosError`, `ERR_BAD_REQUEST`)
+em toda tentativa de tradução, mesmo com o mesmo modelo (`gemini-2.5-flash`)
+e a mesma key funcionando normalmente em `Extrair Metadados` e
+`Identificar Estrutura` (usuário confirmou: processou 4 arquivos em
+português com sucesso usando essas duas etapas, já com a conta paga do
+Gemini).
+
+### O que já foi testado e descartado como causa
+
+1. Autenticação por header (`x-goog-api-key`) vs query param (`?key=`) — trocado, 404 continua
+2. Endpoint `/v1beta/` vs `/v1/` — usuário testou os dois manualmente, 404 continua nos dois
+3. Presença de `system_instruction` + `topP` no body — removidos, alinhado 1:1 com a estrutura de `Extrair Metadados`, 404 continua
+4. `thinkingConfig: { thinkingBudget: 0 }` causar 400 — sugestão de outro assistente, mas **não bate com os fatos**: os nós que funcionam usam a mesma config, e o erro observado é 404, não 400
+
+### Limitação real descoberta (não é mais hipótese, é fato confirmado)
+
+O n8n (self-hosted, versão 2.36.9, arquitetura de task runner separado)
+**descarta o objeto `error.response` do Axios** antes dele chegar no
+catch de um Code node — só sobra `message`, `name`, `code`, `status`.
+Testado 4 formas diferentes de capturar isso (`response.data`,
+`cause.message`, dump completo via `Object.getOwnPropertyNames`,
+priorização de `response` sobre `config`) — nenhuma trouxe o corpo real
+da resposta do Google. Essa é uma limitação de arquitetura, não falta de
+tentativa.
+
+### Próximo passo definido, ainda não aplicado
+
+Substituir a chamada inline (`this.helpers.httpRequest` dentro do Code
+node) por um nó **HTTP Request** de verdade do n8n, configurado com
+"Never Error" (`onError: continueRegularOutput`) — isso faz o corpo e o
+status da resposta virarem dado normal de saída, mesmo em erro, sem
+passar pelo bloqueio de serialização do task runner. É a única forma
+confiável de ver a mensagem real do Google. Exige reestruturar o loop de
+retry (hoje totalmente dentro do Code node) pra fora, ou adaptar.
+
+### Estado da trava (`ingestao_lock`) durante a sessão
+
+Toda vez que a tradução falha de verdade (erro real no node, não o
+retorno gracioso), a execução para antes de `Liberar Lock` e a trava
+fica presa — precisou ser liberada manualmente várias vezes via SQL
+direto. Ainda é um ponto em aberto (mencionado sessão anterior também).
+
+### Erro de operação cometido nesta sessão (corrigido)
+
+3 edições seguidas (troca de auth, 2 diagnósticos) usaram `setNodeParameter`
+com `path: "/parameters/jsCode"` — esse path criava um `parameters.parameters.jsCode`
+aninhado que o n8n nunca executa de verdade, fazendo o código real nunca
+mudar apesar dos "sucessos" reportados pela ferramenta. Corrigido usando
+`updateNodeParameters` com `replace: true`, que substitui o objeto
+`parameters` inteiro corretamente. **Lição**: sempre usar `updateNodeParameters`
+pra reescrever o `jsCode` de um node inteiro, nunca `setNodeParameter` com
+path apontando pra dentro de `parameters`.
+
+---
+
 ## Sessão — 2026-09-01/02 (Claude)
 
 **Contexto:** teste real do fluxo n8n (self-hosted, `automacoes-n8n.tvywld.easypanel.host`,
