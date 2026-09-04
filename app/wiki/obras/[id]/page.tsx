@@ -7,7 +7,7 @@ export default async function ObraPage({
   searchParams,
 }: {
   params: { id: string }
-  searchParams: { q?: string }
+  searchParams: { q?: string; pagina?: string }
 }) {
   const supabase = await createClient()
 
@@ -19,12 +19,19 @@ export default async function ObraPage({
 
   if (!obra) notFound()
 
+  const PAGE_SIZE = 100
+  const paginaAtual = Math.max(1, parseInt(searchParams.pagina || '1', 10) || 1)
+  const from = (paginaAtual - 1) * PAGE_SIZE
+  const to = from + PAGE_SIZE - 1
+
   const { data: trechos, count } = await supabase
     .from('trechos')
     .select('id, conteudo, pagina, chunk_index', { count: 'exact' })
     .eq('obra_id', params.id)
     .order('chunk_index')
-    .limit(50)
+    .range(from, to)
+
+  const totalPaginas = count ? Math.max(1, Math.ceil(count / PAGE_SIZE)) : 1
 
   const colecaoNome: string | null = (obra as any).colecoes?.nome ?? null
   const queryBusca = searchParams.q || ''
@@ -142,11 +149,25 @@ export default async function ObraPage({
                 />
               ))
             })()}
-            {count && count > 50 && (
-              <p className="text-sm text-gray-400 pt-3 border-t border-gray-100">
-                Mostrando 50 de {count} trechos. Use a busca para explorar o conteúdo completo.
-              </p>
-            )}
+            {totalPaginas > 1 && (() => {
+              const linkPagina = (p: number) => {
+                const sp = new URLSearchParams()
+                if (queryBusca) sp.set('q', queryBusca)
+                sp.set('pagina', String(p))
+                return `?${sp.toString()}`
+              }
+              return (
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100 text-sm">
+                  {paginaAtual > 1 ? (
+                    <Link href={linkPagina(paginaAtual - 1)} className="text-navy hover:underline">← Página anterior</Link>
+                  ) : <span />}
+                  <span className="text-gray-400">Página {paginaAtual} de {totalPaginas} · {count} trechos ao todo</span>
+                  {paginaAtual < totalPaginas ? (
+                    <Link href={linkPagina(paginaAtual + 1)} className="text-navy hover:underline">Próxima página →</Link>
+                  ) : <span />}
+                </div>
+              )
+            })()}
           </div>
         )}
       </div>
