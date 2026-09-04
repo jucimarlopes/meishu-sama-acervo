@@ -120,7 +120,7 @@ export default async function ObraPage({
         {!trechos || trechos.length === 0 ? (
           <p className="text-gray-400 text-sm">Nenhum trecho disponível.</p>
         ) : (
-          <div className={`max-w-3xl mx-auto space-y-4 ${queryBusca ? 'highlight-sweep' : ''}`}>
+          <div className={`max-w-3xl mx-auto space-y-7 ${queryBusca ? 'highlight-sweep' : ''}`}>
             {(() => {
               // Agrupa trechos consecutivos em parágrafos "de verdade": só inicia um
               // parágrafo novo quando o trecho ANTERIOR termina em pontuação final
