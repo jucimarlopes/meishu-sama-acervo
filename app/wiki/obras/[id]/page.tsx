@@ -167,7 +167,7 @@ export default async function ObraPage({
               return blocos.map((b) => {
                 if (b.kind === 'titulo') {
                   return (
-                    <h3 key={b.key} className="font-serif text-lg text-navy mt-6 mb-1">
+                    <h3 key={b.key} className="font-serif font-semibold text-lg text-navy mt-6 mb-1">
                       {b.conteudo}
                     </h3>
                   )
