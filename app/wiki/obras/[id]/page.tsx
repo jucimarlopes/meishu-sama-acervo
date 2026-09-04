@@ -130,7 +130,7 @@ export default async function ObraPage({
               // relação ao trecho anterior), e índice ganha visual próprio,
               // nunca se mistura com a prosa corrida.
               const FIM_DE_FRASE = /[.!?…”"）』」]['"）』」]?\s*$/
-              type Bloco = { key: string; kind: 'titulo' | 'indice' | 'paragrafo'; conteudo: string }
+              type Bloco = { key: string; kind: 'titulo' | 'indice' | 'nota' | 'paragrafo'; conteudo: string }
               const blocos: Bloco[] = []
               let tituloAnterior: string | null = null
 
@@ -140,13 +140,17 @@ export default async function ObraPage({
                   : ''
                 const spanHtml = `<span id="trecho-${t.chunk_index}">${marcador}${destacarTexto(t.conteudo, queryBusca)}</span>`
 
-                if (t.titulo_secao && t.titulo_secao !== tituloAnterior && t.tipo_trecho !== 'indice') {
+                if (t.titulo_secao && t.titulo_secao !== tituloAnterior && t.tipo_trecho !== 'indice' && t.tipo_trecho !== 'nota_rodape') {
                   blocos.push({ key: `h-${t.chunk_index}`, kind: 'titulo', conteudo: t.titulo_secao })
                 }
                 tituloAnterior = t.titulo_secao ?? tituloAnterior
 
                 if (t.tipo_trecho === 'indice') {
                   blocos.push({ key: `idx-${t.chunk_index}`, kind: 'indice', conteudo: spanHtml })
+                  return
+                }
+                if (t.tipo_trecho === 'nota_rodape') {
+                  blocos.push({ key: `nota-${t.chunk_index}`, kind: 'nota', conteudo: spanHtml })
                   return
                 }
 
@@ -173,6 +177,15 @@ export default async function ObraPage({
                     <div
                       key={b.key}
                       className="font-mono text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded px-3 py-2 whitespace-pre-line leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: b.conteudo }}
+                    />
+                  )
+                }
+                if (b.kind === 'nota') {
+                  return (
+                    <div
+                      key={b.key}
+                      className="text-sm italic text-gray-600 border-l-2 border-gray-300 pl-3 py-1 whitespace-pre-line leading-relaxed"
                       dangerouslySetInnerHTML={{ __html: b.conteudo }}
                     />
                   )
