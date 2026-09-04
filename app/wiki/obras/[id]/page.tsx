@@ -26,7 +26,7 @@ export default async function ObraPage({
 
   const { data: trechos, count } = await supabase
     .from('trechos')
-    .select('id, conteudo, pagina, chunk_index', { count: 'exact' })
+    .select('id, conteudo, pagina, chunk_index, titulo_secao, tipo_trecho', { count: 'exact' })
     .eq('obra_id', params.id)
     .order('chunk_index')
     .range(from, to)
@@ -126,28 +126,65 @@ export default async function ObraPage({
               // parágrafo novo quando o trecho ANTERIOR termina em pontuação final
               // (. ! ? … " etc). Sem isso, o corte do chunking no meio da frase
               // faria a mesma frase virar dois parágrafos visuais.
+              // Título de seção vira cabeçalho de verdade (só quando muda em
+              // relação ao trecho anterior), e índice ganha visual próprio,
+              // nunca se mistura com a prosa corrida.
               const FIM_DE_FRASE = /[.!?…”"）』」]['"）』」]?\s*$/
-              const grupos: { key: string; html: string }[] = []
+              type Bloco = { key: string; kind: 'titulo' | 'indice' | 'paragrafo'; conteudo: string }
+              const blocos: Bloco[] = []
+              let tituloAnterior: string | null = null
+
               trechos.forEach((t, i) => {
-                const anterior = trechos[i - 1]
-                const novoParagrafo = i === 0 || FIM_DE_FRASE.test((anterior?.conteudo || '').trim())
                 const marcador = t.pagina
                   ? `<sup class="text-[10px] text-gray-300 mx-0.5" contenteditable="false">p.${t.pagina}</sup>`
                   : ''
                 const spanHtml = `<span id="trecho-${t.chunk_index}">${marcador}${destacarTexto(t.conteudo, queryBusca)}</span>`
-                if (novoParagrafo || grupos.length === 0) {
-                  grupos.push({ key: `p-${t.chunk_index}`, html: spanHtml })
+
+                if (t.titulo_secao && t.titulo_secao !== tituloAnterior && t.tipo_trecho !== 'indice') {
+                  blocos.push({ key: `h-${t.chunk_index}`, kind: 'titulo', conteudo: t.titulo_secao })
+                }
+                tituloAnterior = t.titulo_secao ?? tituloAnterior
+
+                if (t.tipo_trecho === 'indice') {
+                  blocos.push({ key: `idx-${t.chunk_index}`, kind: 'indice', conteudo: spanHtml })
+                  return
+                }
+
+                const anterior = trechos[i - 1]
+                const novoParagrafo = i === 0 || FIM_DE_FRASE.test((anterior?.conteudo || '').trim())
+                const ultimo = blocos[blocos.length - 1]
+                if (novoParagrafo || !ultimo || ultimo.kind !== 'paragrafo') {
+                  blocos.push({ key: `p-${t.chunk_index}`, kind: 'paragrafo', conteudo: spanHtml })
                 } else {
-                  grupos[grupos.length - 1].html += ' ' + spanHtml
+                  ultimo.conteudo += ' ' + spanHtml
                 }
               })
-              return grupos.map((g) => (
-                <p
-                  key={g.key}
-                  className="text-base leading-8 text-gray-800 text-justify indent-8 whitespace-pre-line"
-                  dangerouslySetInnerHTML={{ __html: g.html }}
-                />
-              ))
+
+              return blocos.map((b) => {
+                if (b.kind === 'titulo') {
+                  return (
+                    <h3 key={b.key} className="font-serif text-lg text-navy mt-6 mb-1">
+                      {b.conteudo}
+                    </h3>
+                  )
+                }
+                if (b.kind === 'indice') {
+                  return (
+                    <div
+                      key={b.key}
+                      className="font-mono text-xs text-gray-500 bg-gray-50 border border-gray-200 rounded px-3 py-2 whitespace-pre-line leading-relaxed"
+                      dangerouslySetInnerHTML={{ __html: b.conteudo }}
+                    />
+                  )
+                }
+                return (
+                  <p
+                    key={b.key}
+                    className="text-base leading-8 text-gray-800 text-justify indent-8 whitespace-pre-line"
+                    dangerouslySetInnerHTML={{ __html: b.conteudo }}
+                  />
+                )
+              })
             })()}
             {totalPaginas > 1 && (() => {
               const linkPagina = (p: number) => {
