@@ -8,68 +8,71 @@ entre assistentes de IA diferentes que tenham acesso a este projeto.
 
 ## Sessão — 2026-09-02 (Claude) — Debug: 404 no Traduzir Lote Gemini
 
-**⚠️ PISTA MAIS IMPORTANTE PARA A PRÓXIMA SESSÃO**: o usuário confirmou que o
-código original de tradução (versão bem anterior às edições desta sessão)
-**conseguia trazer tradução com sucesso**. Ou seja, o 404 é uma regressão
-introduzida em algum momento das edições — vale comparar contra o histórico
-de versões do workflow no n8n (`get_workflow_history`) pra achar exatamente
-o que mudou entre a última versão que funcionava e a atual, em vez de seguir
-só tentando variações novas às cegas.
+**✅ RESOLVIDO — causa raiz real**: comparando com o arquivo JSON original
+enviado pelo usuário, a estrutura da chamada (system_instruction, topP,
+v1beta) foi restaurada idêntica à original — e o 404 **continuou**,
+descartando de vez a hipótese estrutural. A causa real só apareceu depois
+de substituir a chamada inline por um nó **HTTP Request nativo com
+"Never Error" + "Full Response"** (contornando o bloqueio do task runner
+que escondia o corpo do erro em Code nodes — ver detalhes técnicos
+abaixo). Mensagem real do Google:
 
-### O problema
+> "This model models/gemini-2.5-flash is no longer available to new
+> users. Please update your code to use models/gemini-3.6-flash..."
 
-Nó `Traduzir Lote Gemini` retorna **404** (`AxiosError`, `ERR_BAD_REQUEST`)
-em toda tentativa de tradução, mesmo com o mesmo modelo (`gemini-2.5-flash`)
-e a mesma key funcionando normalmente em `Extrair Metadados` e
-`Identificar Estrutura` (usuário confirmou: processou 4 arquivos em
-português com sucesso usando essas duas etapas, já com a conta paga do
-Gemini).
+**O motivo**: `gemini-2.5-flash` foi bloqueado pelo Google especificamente
+para contas "novas" — e a troca de billing do usuário (free → pago) fez a
+conta contar como nova para esse efeito, mesmo com a chave sendo a mesma.
+Isso também explica por que `Extrair Metadados`/`Identificar Estrutura`
+funcionaram antes: rodaram na conta antiga, pré-troca.
 
-### O que já foi testado e descartado como causa
+**Fix aplicado**: trocado `gemini-2.5-flash` → `gemini-3.6-flash` nos 3
+lugares (`Chamar Gemini Traducao`, `Extrair Metadados`,
+`Identificar Estrutura`). Custo por obra sobe (~3-5x mais caro que o
+2.5 Flash), mas ainda é poucos reais por livro — ver conversa para a
+conta detalhada.
 
-1. Autenticação por header (`x-goog-api-key`) vs query param (`?key=`) — trocado, 404 continua
-2. Endpoint `/v1beta/` vs `/v1/` — usuário testou os dois manualmente, 404 continua nos dois
-3. Presença de `system_instruction` + `topP` no body — removidos, alinhado 1:1 com a estrutura de `Extrair Metadados`, 404 continua
-4. `thinkingConfig: { thinkingBudget: 0 }` causar 400 — sugestão de outro assistente, mas **não bate com os fatos**: os nós que funcionam usam a mesma config, e o erro observado é 404, não 400
+**Novo problema, bem mais simples**: com o 3.6 Flash funcionando, o
+primeiro teste real deu `finishReason: MAX_TOKENS` — a tradução ficou
+maior que o limite de 8192 tokens de saída configurado. Ainda não
+corrigido (aumentar `maxOutputTokens` ou dividir lotes menores) —
+pausado a pedido do usuário para primeiro resolver formatação de
+documentos extensos no site.
 
-### Limitação real descoberta (não é mais hipótese, é fato confirmado)
+### Arquitetura da tradução hoje (pós-diagnóstico)
 
-O n8n (self-hosted, versão 2.36.9, arquitetura de task runner separado)
-**descarta o objeto `error.response` do Axios** antes dele chegar no
-catch de um Code node — só sobra `message`, `name`, `code`, `status`.
-Testado 4 formas diferentes de capturar isso (`response.data`,
-`cause.message`, dump completo via `Object.getOwnPropertyNames`,
-priorização de `response` sobre `config`) — nenhuma trouxe o corpo real
-da resposta do Google. Essa é uma limitação de arquitetura, não falta de
-tentativa.
+O nó único `Traduzir Lote Gemini` foi dividido em 3, especificamente
+para permitir diagnóstico via HTTP Request node:
+`Preparar Requisicao Traducao` (monta o corpo da requisição) →
+`Chamar Gemini Traducao` (HTTP Request nativo, Never Error, Full
+Response) → `Traduzir Lote Gemini` (processa a resposta, sucesso ou
+erro). **O retry de 3 tentativas foi removido nessa reestruturação** e
+ainda não foi recolocado — ponto em aberto se 429/rate limit voltar a
+ser problema.
 
-### Próximo passo definido, ainda não aplicado
+### Limitação técnica confirmada (útil para futuros debugs)
 
-Substituir a chamada inline (`this.helpers.httpRequest` dentro do Code
-node) por um nó **HTTP Request** de verdade do n8n, configurado com
-"Never Error" (`onError: continueRegularOutput`) — isso faz o corpo e o
-status da resposta virarem dado normal de saída, mesmo em erro, sem
-passar pelo bloqueio de serialização do task runner. É a única forma
-confiável de ver a mensagem real do Google. Exige reestruturar o loop de
-retry (hoje totalmente dentro do Code node) pra fora, ou adaptar.
+n8n self-hosted 2.36.9, arquitetura de task runner separado: o
+`error.response` do Axios é **descartado** antes de chegar num Code
+node (`this.helpers.httpRequest`) — só sobra `message`/`name`/`code`/
+`status`. A única forma confiável de ver corpo real de erro HTTP é um
+nó **HTTP Request** nativo com `options.response.response.neverError:
+true` + `fullResponse: true`.
 
-### Estado da trava (`ingestao_lock`) durante a sessão
+### Lição de operação (repetida, reforçando)
 
-Toda vez que a tradução falha de verdade (erro real no node, não o
-retorno gracioso), a execução para antes de `Liberar Lock` e a trava
-fica presa — precisou ser liberada manualmente várias vezes via SQL
-direto. Ainda é um ponto em aberto (mencionado sessão anterior também).
+`setNodeParameter` com `path` deve ser relativo direto ao nome do
+parâmetro (ex: `/url`, `/jsCode`) — **nunca** prefixado com
+`/parameters/`, isso cria uma duplicação aninhada
+(`parameters.parameters.X`) que o n8n nunca executa. Já causou 3
+edições inúteis nesta sessão antes de ser identificado.
 
-### Erro de operação cometido nesta sessão (corrigido)
+### Próximo tema (a pedido do usuário)
 
-3 edições seguidas (troca de auth, 2 diagnósticos) usaram `setNodeParameter`
-com `path: "/parameters/jsCode"` — esse path criava um `parameters.parameters.jsCode`
-aninhado que o n8n nunca executa de verdade, fazendo o código real nunca
-mudar apesar dos "sucessos" reportados pela ferramenta. Corrigido usando
-`updateNodeParameters` com `replace: true`, que substitui o objeto
-`parameters` inteiro corretamente. **Lição**: sempre usar `updateNodeParameters`
-pra reescrever o `jsCode` de um node inteiro, nunca `setNodeParameter` com
-path apontando pra dentro de `parameters`.
+Formatação de documentos **extensos** no site — o acervo começou a
+receber obras longas de verdade, e a leitura precisa ficar boa nesse
+volume (a formatação anterior foi ajustada só com documentos pequenos
+de teste).
 
 ---
 
